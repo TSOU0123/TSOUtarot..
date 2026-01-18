@@ -4,66 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>塔羅占卜 (資料庫整合版)</title>
-   <style>
+    <style>
         :root {
             --card-w: 120px;
             --card-h: 210px;
         }
 
-        body {
-            background-color: #0e0e0e;
-            color: #d4af37;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            overflow: hidden;
+        body { 
+            font-family: 'Helvetica', sans-serif; 
+            background: radial-gradient(circle at center, #1a1a1a, #000); 
+            color: white; 
+            margin: 0; 
+            height: 100vh; 
+            overflow: hidden; 
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
         }
+select {
+    /* ...原有設定... */
+    min-width: 110px; /* 確保有最小寬度 */
+    text-align: center;
+}
 
-        /* 桌面版控制列 (保持一排) */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            display: flex;
-            gap: 10px;
-            z-index: 999;
-            background: rgba(0,0,0,0.6);
-            padding: 10px 20px;
-            border-radius: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: auto;
-            max-width: 90%;
-        }
+/* 針對選單預設選項 (disabled) 的顏色調整 */
+select option[disabled] {
+    color: #888;
+    font-weight: bold;
+    background: #111;
+}
 
-        select, button {
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #d4af37;
-            color: #d4af37;
-            border-radius: 5px;
-            outline: none;
-        }
-
-        button:disabled {
-            border-color: #555;
-            color: #555;
-            cursor: not-allowed;
-        }
-
-        button:hover:not(:disabled) {
-            background: #d4af37;
-            color: #000;
-        }
-
-        /* --- ★★★ 手機版專屬優化區 ★★★ --- */
-        @media (max-width: 600px) {
+@media (max-width: 600px) {
             :root {
-                /* 1. 將卡片基礎尺寸縮小 30% */
+                /* 手機版卡片縮小，避免佔據太多空間 */
                 --card-w: 80px; 
                 --card-h: 140px;
             }
@@ -71,212 +44,274 @@
             .controls {
                 bottom: 10px;
                 padding: 10px;
-                width: 95%;
+                width: 96%;
                 border-radius: 15px;
-                /* 改為 Grid 佈局，讓按鈕整齊排列 */
+                gap: 8px;
+                
+                /* ★ 關鍵修改：改用 Grid 網格佈局，強制分行 */
                 display: grid;
-                grid-template-columns: 1fr 1fr; /* 兩欄 */
-                gap: 8px; 
+                grid-template-columns: 1fr 1fr; /* 分兩欄 */
+                grid-template-rows: auto auto auto; /* 三行 */
             }
 
-            /* 讓面向選擇 (綜合運勢) 佔滿整行，字才不會被切掉 */
+            /* 1. 面向選擇 (綜合運勢) 佔滿整行 */
             #categorySelector {
                 grid-column: 1 / -1; 
-                text-align-last: center; /* 文字置中 */
+                width: 100%;
+                text-align-last: center; /* 文字強制置中 */
+                font-size: 14px;
+                padding: 8px;
             }
 
-            /* 基礎與進階各佔一半 */
+            /* 2. 基礎與進階各佔一半 (自動) */
             #spreadBasic, #spreadAdv {
                 width: 100%;
-                font-size: 13px; /* 字體適中 */
+                font-size: 13px;
+                padding: 8px 2px;
+                max-width: none; /* 移除寬度限制 */
             }
 
-            /* 按鈕區也佔滿整行 */
+            /* 3. 按鈕區佔滿整行 */
             #btnShuffle, #btnSpread, #btnReset {
                 grid-column: 1 / -1;
                 width: 100%;
-                padding: 12px;
-                font-weight: bold;
+                padding: 10px;
+                font-size: 16px;
             }
+        }     
+/* --- 控制區 --- */
+        .controls {
+            position: absolute;
+            bottom: 40px;
+            z-index: 200;
+            display: flex;
+            gap: 20px;
         }
 
-        /* 以下保持原有樣式 */
-        #tableArea {
+        button { 
+            padding: 12px 35px; 
+            font-size: 18px; 
+            cursor: pointer; 
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #d4af37; 
+            color: #d4af37; 
+            border-radius: 50px; 
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        button:hover:not(:disabled) { 
+            background: #d4af37; 
+            color: #000; 
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+            transform: translateY(-2px);
+        }
+        button:disabled { border-color: #555; color: #555; cursor: not-allowed; }
+
+        /* --- 桌面區域 --- */
+        .table-area {
             position: relative;
             width: 100%;
             height: 100%;
-            perspective: 1000px;
-            overflow: hidden;
+            perspective: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        /* --- 卡片本體 --- */
         .card {
             width: var(--card-w);
             height: var(--card-h);
             position: absolute;
-            top: 50%;
+            transform-style: preserve-3d;
             left: 50%;
-            transform-style: preserve-3d;
-            transform: translate(-50%, -50%);
-            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            top: 50%;
+            margin-left: calc(var(--card-w) / -2);
+            margin-top: calc(var(--card-h) / -2);
+            transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
+            transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
+        /* 扇形展開特效 */
+        .card.spread:hover {
+            z-index: 999 !important;
+            transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) translateY(-40px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+            transition: transform 0.2s ease-out; 
         }
+        .card.spread { box-shadow: -5px 0 10px rgba(0,0,0,0.3); }
+
+        .card-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; transition: transform 0.8s;
+        }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
 
         .front, .back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 8px;
-            border: 2px solid #d4af37;
-            background-color: #1a1a1a;
-            box-sizing: border-box; 
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 10px; overflow: hidden;
         }
 
         .front {
-            background: repeating-linear-gradient(
-                45deg,
-                #1a1a1a,
-                #1a1a1a 10px,
-                #222 10px,
-                #222 20px
-            );
-            display: flex;
-            align-items: center;
-            justify-content: center;
+    /* 1. 設定背景圖片 */
+    background-image: url('images/back.jpg'); 
+    
+    /* 2. 確保圖片填滿且不重複 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* 3. 邊框顏色可以調整成跟圖片金色一致 */
+    border: 2px solid #d4af37; 
+    
+    /* 4. 加一點內陰影增加立體感 */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+        .back {
+            background: #fff; transform: rotateY(180deg);
+            display: flex; flex-direction: column;
         }
         
-        .front::after {
-            content: "✦";
-            font-size: 40px;
-            color: #555;
-        }
+        .back-img-container { flex: 1; width: 100%; overflow: hidden; position: relative; }
+        .back img { width: 100%; height: 100%; object-fit: fill; }
+        
+	.back-text {
+ 	   padding: 4px 2px; /* 減少內距 */
+	}
 
-        .back {
-            transform: rotateY(180deg);
-            display: flex;
-            flex-direction: column; 
-            background: #000;
-            overflow: hidden; 
-        }
+	/* 上方的「位置名稱」(如：過去、現在) */
+	.back-text div:first-child {
+ 	   font-size: 10px !important; /* 原本可能比較大，強制縮小 */
+  	  margin-bottom: 1px !important;
+  	  opacity: 0.9;
+	}
 
-        .back-img-container {
-            flex: 1; 
-            width: 100%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
+/* 下方的「牌卡名稱」(如：愚者) */
+.card-name-text {
+    font-size: 10px !important; /* 設定為 11px 或 12px */
+    font-weight: bold;
+    line-height: 1.2;
+    text-overflow: ellipsis; /* 超出部分變... */
+}
+        
+/* 修改後的 .card.drawn */
+.card.drawn {
+    /* 1. 關鍵修正：取消原本 CSS 的置中偏移，交給 JS 控制 */
+    margin: 0 !important; 
+    
+    /* 2. 確保定位基準點在正中間 */
+    top: 50%;
+    left: 50%;
 
-        .back-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; 
-        }
+    /* 3. 保留過渡動畫 */
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
-        .back-text {
-            height: auto; 
-            min-height: 40px; 
-            background: rgba(0,0,0,0.9);
-            border-top: 1px solid #d4af37;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 4px;
-            box-sizing: border-box;
-        }
+/* ★★★ 關鍵設定：滑鼠懸停 (Hover) 效果 ★★★ */
+.card.drawn:hover {
+    /* 1. 層級變最高：確保被蓋住的牌會瞬間跑到最上面 */
+    z-index: 9999 !important; 
+    
+    /* 2. 視覺懸浮感：加深陰影，讓它看起來離背景更遠 */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
+    
+    /* 3. 稍微打亮：讓選中的牌看起來發光 */
+    filter: brightness(1.1);
+    
+    /* 4. 滑鼠游標變手型 */
+    cursor: pointer;
+}
+/* 新增：下拉選單樣式 */
+select {
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #d4af37;
+    color: #d4af37;
+    border-radius: 4px;
+    outline: none;
+    margin-right: 5px;
+}
+select:hover {
+    background: #d4af37;
+    color: #000;
+}
+option {
+    background: #000;
+    color: #d4af37;
+}
 
-        .card-name-text {
-            font-size: 14px;
-            font-weight: bold;
-            color: #fff;
-            text-align: center;
-            white-space: nowrap; 
-            overflow: hidden;
-            text-overflow: ellipsis; 
-            width: 100%; 
-        }
+@media (max-width: 600px) {
+    select {
+        max-width: 100px; /* 手機版選單不要太寬 */
+        font-size: 12px;
+    }
+}
 
-        #statusText {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 1.2em;
-            text-shadow: 0 2px 4px black;
-            pointer-events: none;
-            z-index: 100;
-            transition: opacity 0.5s;
-        }
-
-        /* Modal Styles */
+        /* --- Modal 進階樣式 --- */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .modal-overlay.active {
-            display: flex;
-            opacity: 1;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s;
         }
         .modal-content {
-            background: #1a1a1a;
-            border: 2px solid #d4af37;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 10px;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-        }
-        .close-btn {
-            position: absolute;
-            top: 10px; right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #888;
+            background: #1a1a1a; border: 2px solid #d4af37; color: #fff;
+            padding: 0; width: 90%; max-width: 550px; border-radius: 15px;
+            text-align: center; box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
+            transform: translateY(20px); transition: transform 0.3s;
+            overflow: hidden; display: flex; flex-direction: column;
+            max-height: 85vh;
         }
         .modal-header {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 10px;
-            color: #d4af37;
+            background: linear-gradient(90deg, #2c3e50, #000);
+            padding: 20px; border-bottom: 1px solid #d4af37;
         }
-        .detail-btn {
-            margin-top: 15px;
-            width: 100%;
-            padding: 12px;
-            background: #d4af37;
-            color: #000;
-            border: none;
-            font-weight: bold;
+        .modal-title { color: #d4af37; font-size: 22px; font-weight: bold; margin: 0;}
+        .modal-subtitle { color: #aaa; font-size: 14px; margin-top: 5px; }
+        .modal-body {
+            padding: 20px; overflow-y: auto; flex: 1; text-align: left; line-height: 1.6; color: #ddd;
         }
+        /* 第一層樣式 */
+        .image-desc-box {
+            background: rgba(255,255,255,0.05); padding: 15px;
+            border-radius: 8px; margin-bottom: 20px; font-size: 15px;
+            border-left: 3px solid #d4af37;
+        }
+        .category-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;
+        }
+        .cat-btn {
+            background: transparent; border: 1px solid #555; color: #ccc;
+            padding: 10px 5px; border-radius: 8px; cursor: pointer;
+            transition: all 0.2s; font-size: 14px;
+        }
+        .cat-btn:hover { background: #d4af37; color: #000; border-color: #d4af37; }
+        /* 第二層樣式 */
+        .detail-view { display: none; animation: fadeIn 0.3s; }
+        .detail-title {
+            color: #f1c40f; font-size: 18px; font-weight: bold; margin-bottom: 10px;
+            text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px;
+        }
+        .detail-content { font-size: 15px; margin-bottom: 20px; }
+        .back-btn {
+            width: 100%; padding: 10px; background: #444; color: white;
+            border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;
+        }
+        .back-btn:hover { background: #666; }
+        .modal-footer { padding: 15px; background: #111; border-top: 1px solid #333; }
+        .modal-close {
+            background: #d4af37; color: #000; border: none; padding: 10px 40px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 16px; width: 100%;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -779,7 +814,7 @@
     function onCardClick(card) {
         if (isAnimating) return;
 
-        // 1. 如果點擊已翻開的牌 -> 顯示詳細解釋
+        // 1. 如果已翻開，顯示解釋
         if (card.classList.contains('flipped')) {
             const resultIndex = parseInt(card.dataset.drawnIndex); 
             currentResult = drawnResults[resultIndex];
@@ -787,82 +822,70 @@
             return;
         }
 
-        // 2. 檢查牌陣上限
+        // 2. 檢查上限
         const spreadInfo = SPREAD_DATA[currentSpreadKey];
         if (drawnCount >= spreadInfo.positions.length) {
             updateStatus("牌陣已滿，請點擊已翻開的牌查看解釋。");
             return;
         }
 
-        if (!isSpread || hasDrawn) {
-            if(!isSpread) return;
-        }
+        if (!isSpread || hasDrawn) { if(!isSpread) return; }
         
         // 3. 執行抽牌
         isAnimating = true;
-        
         const cardDOMIndex = parseInt(card.dataset.index);
         const drawId = shuffledDeck[cardDOMIndex]; 
         const isReversed = Math.random() < 0.5;
-
         const currentPosName = spreadInfo.positions[drawnCount];
         const currentLayout = spreadInfo.layout[drawnCount]; 
 
         let data = null;
-        if (typeof getCardData === 'function') {
-            data = getCardData(drawId);
-        } else {
-            data = { name: "資料讀取失敗", id: drawId };
-        }
+        if (typeof getCardData === 'function') { data = getCardData(drawId); } 
+        else { data = { name: "資料讀取失敗", id: drawId }; }
 
         drawnResults.push({
-            id: drawId,
-            name: data.name,
-            isReversed: isReversed,
-            positionName: currentPosName,
-            index: drawnCount
+            id: drawId, name: data.name, isReversed: isReversed,
+            positionName: currentPosName, index: drawnCount
         });
-
-// ... (前面程式碼保持不變) ...
 
         card.dataset.drawnIndex = drawnCount;
         card.classList.remove('spread');
         card.classList.add('drawn');
         
-        // ★★★ 修改處：手機版尺寸優化 ★★★
+        // ★★★ 手機版尺寸最佳化調整 (關鍵修改點) ★★★
         const isMobile = window.innerWidth < 600;
-        
-        // 1. 牌與牌的間距 (縮小間距，讓牌陣更緊湊)
-        // 手機版改為 0.45 倍，電腦版維持 1 倍
-        const spaceScale = isMobile ? 0.45 : 1; 
+        const spaceScale = isMobile ? 0.45 : 1;  // 間距變小 (原本擠在一起是因為這個太大)
+        const sizeScale = isMobile ? 0.85 : 1.4; // 尺寸變小 (原本巨大是因為這個太大)
         
         const finalX = currentLayout.x * spaceScale;
         const finalY = currentLayout.y * spaceScale;
-
-        // 2. 牌本身的放大倍率
-        // 手機版從 1.15 改為 0.85 (讓牌看起來小巧精緻)
-        const sizeScale = isMobile ? 0.85 : 1.4; 
-
-        // 3. 座標定位 (加入旋轉與大小)
-        let rotateDeg = 0;
-        if (currentLayout.rotate) {
-            rotateDeg = currentLayout.rotate;
-        }
         
+        let rotateDeg = 0;
+        if (currentLayout.rotate) { rotateDeg = currentLayout.rotate; }
+        
+        // 飛行定位
         card.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px)) rotate(${rotateDeg}deg) scale(${sizeScale})`;
         card.style.zIndex = 100 + drawnCount;
         
-        // ... (後面程式碼保持不變) ...
-
         updateStatus(`解讀中：${currentPosName}...`);
 
         setTimeout(() => {
             const backDiv = card.querySelector('.back');
+            
+            // ★ 線上圖庫修正
+            let onlineImgName = "";
+            const idVal = parseInt(drawId);
+            if (idVal <= 21) onlineImgName = `m${String(idVal).padStart(2, '0')}.jpg`;
+            else if (idVal <= 35) onlineImgName = `w${String(idVal - 21).padStart(2, '0')}.jpg`;
+            else if (idVal <= 49) onlineImgName = `c${String(idVal - 35).padStart(2, '0')}.jpg`;
+            else if (idVal <= 63) onlineImgName = `s${String(idVal - 49).padStart(2, '0')}.jpg`;
+            else onlineImgName = `p${String(idVal - 63).padStart(2, '0')}.jpg`;
+
             const imgPath = `images/${drawId}.jpg`;
 
             backDiv.innerHTML = `
                 <div class="back-img-container">
-                    <img src="${imgPath}" style="${isReversed ? 'transform: rotate(180deg)' : ''}" onerror="this.src='https://via.placeholder.com/300x525?text=${encodeURIComponent(data.name)}'">
+                    <img src="${imgPath}" style="${isReversed ? 'transform: rotate(180deg)' : ''}" onerror="this.src='https://via.placeholder.com/300x525?text=Card'">
                 </div>
                 <div class="back-text">
                     <div style="font-size:12px; color:#d4af37; margin-bottom:2px;">[${drawnCount+1}] ${currentPosName}</div>
@@ -884,7 +907,6 @@
 
         }, 600);
     }
-
     // --- 詳細視窗 ---
     function showModal() {
         if(!currentResult) return;
