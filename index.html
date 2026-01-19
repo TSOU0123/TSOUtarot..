@@ -34,52 +34,51 @@ select option[disabled] {
     background: #111;
 }
 
-@media (max-width: 600px) {
+            @media (max-width: 600px) {
             :root {
-                /* 手機版卡片縮小，避免佔據太多空間 */
                 --card-w: 80px; 
                 --card-h: 140px;
             }
 
             .controls {
-                bottom: 10px;
-                padding: 10px;
-                width: 96%;
-                border-radius: 15px;
-                gap: 8px;
+                /* ★ 關鍵修正：增加底部安全距離 (Safe Area)，避開 iPhone 黑條 */
+                bottom: 0;
+                width: 100%;
+                border-radius: 20px 20px 0 0; /* 只有上面圓角，貼齊底部 */
+                padding: 15px 15px calc(15px + env(safe-area-inset-bottom)) 15px;
                 
-                /* ★ 關鍵修改：改用 Grid 網格佈局，強制分行 */
+                /* 使用 Grid 排版 */
                 display: grid;
                 grid-template-columns: 1fr 1fr; /* 分兩欄 */
-                grid-template-rows: auto auto auto; /* 三行 */
+                gap: 10px;
+                background: rgba(0,0,0,0.85); /* 背景深一點，看得比較清楚 */
             }
 
-            /* 1. 面向選擇 (綜合運勢) 佔滿整行 */
+            /* 第一排：面向選擇 (佔滿整行) */
             #categorySelector {
                 grid-column: 1 / -1; 
                 width: 100%;
-                text-align-last: center; /* 文字強制置中 */
-                font-size: 14px;
-                padding: 8px;
             }
 
-            /* 2. 基礎與進階各佔一半 (自動) */
+            /* 第二排：基礎與進階選單 (各佔一半，自動排列) */
             #spreadBasic, #spreadAdv {
                 width: 100%;
-                font-size: 13px;
-                padding: 8px 2px;
-                max-width: none; /* 移除寬度限制 */
+                font-size: 13px; /* 字體微調 */
             }
 
-            /* 3. 按鈕區佔滿整行 */
-            #btnShuffle, #btnSpread, #btnReset {
-                grid-column: 1 / -1;
+            /* 第三排：按鈕 (讓洗牌跟展開並排，省空間) */
+            #btnShuffle, #btnSpread {
+                grid-column: span 1; /* 各佔一格 */
                 width: 100%;
-                padding: 10px;
-                font-size: 16px;
+                padding: 12px 0; /* 增加按鈕高度，比較好按 */
             }
-        }     
-/* --- 控制區 --- */
+            
+            /* 重置按鈕通常單獨出現，讓它佔滿 */
+            #btnReset {
+                grid-column: 1 / -1;
+                padding: 12px;
+            }
+        }/* --- 控制區 --- */
         .controls {
             position: absolute;
             bottom: 40px;
@@ -226,17 +225,22 @@ select option[disabled] {
     cursor: pointer;
 }
 /* 新增：下拉選單樣式 */
-select {
-    padding: 8px 12px;
-    font-size: 16px;
-    cursor: pointer;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid #d4af37;
-    color: #d4af37;
-    border-radius: 4px;
-    outline: none;
-    margin-right: 5px;
-}
+        select {
+            padding: 10px 30px 10px 15px; /* 右邊留多一點空間給箭頭 */
+            font-size: 16px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            border-radius: 8px;
+            outline: none;
+            text-align: center;
+            text-align-last: center;
+            
+            /* ★ 關鍵修正：保留手機原生的下拉選單箭頭，不然會看起來像沒反應 ★ */
+            appearance: menulist; 
+            -webkit-appearance: menulist;
+        }
 select:hover {
     background: #d4af37;
     color: #000;
