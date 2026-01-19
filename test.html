@@ -41,6 +41,7 @@
             -webkit-text-size-adjust: 100%;
             text-size-adjust: 100%;
         }
+
 .modal-card-img-container {
     text-align: center;
     padding-bottom: 20px;
@@ -64,6 +65,45 @@
     transition: transform 0.3s; /* 旋轉時有動畫 */
     margin-top: 10px;
 }
+/* ★★★ 強制修正版：頂部提示文字 ★★★ */
+        .hint {
+            position: absolute !important;
+            top: 15% !important; /* 強制往下移，不要貼在最上面 */
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 20002 !important; /* ★ 關鍵：設定超高層級，確保浮在所有牌跟視窗上面 */
+            
+            /* 外觀設定：黑底金邊，超高辨識度 */
+            background: rgba(0, 0, 0, 0.9) !important;
+            color: #f1c40f !important;
+            border: 2px solid #f1c40f !important;
+            border-radius: 50px !important;
+            padding: 15px 40px !important;
+            
+            /* 文字設定 */
+            font-size: 20px !important;
+            font-weight: bold !important;
+            letter-spacing: 2px !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            
+            /* 發光特效 */
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5) !important;
+            pointer-events: none; /* 讓點擊穿透，不擋住下面的操作 */
+            transition: all 0.3s ease;
+        }
+
+        /* 手機版特別調整 */
+        @media (max-width: 600px) {
+            .hint {
+                top: 12% !important; /* 手機版位置 */
+                font-size: 16px !important;
+                padding: 10px 20px !important;
+                width: 80% !important;
+                white-space: normal !important; /* 手機版允許換行 */
+                line-height: 1.5;
+            }
+        }
 .nav-btn {
     position: absolute;
     top: 50%;
@@ -88,76 +128,78 @@
 
 /* 如果是手機版，按鈕稍微小一點，避免遮擋內容 */
 @media (max-width: 600px) {
-    .nav-btn {
-        padding: 5px 10px;
-        font-size: 18px;
-        background: rgba(0,0,0,0.8);
+    :root {
+        /* 縮小卡片避免爆版 */
+        --card-w: 60px; 
+        --card-h: 105px;
+    }
+
+    .controls {
+        bottom: 0; 
+        padding: 15px 15px 30px 15px; 
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        gap: 12px; /* 增加一點間距 */
+        background: rgba(0,0,0,0.95); /* 背景深一點，避免干擾 */
+        box-sizing: border-box; 
+        
+        display: grid; 
+        grid-template-columns: 1fr 1fr; /* 兩欄 */
+        grid-template-rows: auto;       /* 自動高度 */
+        left: 0; 
+    }
+
+    /* ★★★ 修改 1：運勢選單變長、變大 ★★★ */
+    #categorySelector {
+        grid-column: 1 / -1; /* 跨滿整行 (左到右) */
+        width: 100%;
+        padding: 14px 15px;  /* 增加高度 */
+        font-size: 16px;     /* 字體加大 */
+        border-radius: 10px;
+    }
+
+    /* 基礎與進階牌陣 (維持並排) */
+    #spreadBasic, #spreadAdv {
+        width: 100%;
+        font-size: 13px;
+        padding: 12px 5px;
+    }
+
+    /* 洗牌與展開按鈕 (維持並排) */
+    #btnShuffle, #btnSpread {
+        grid-column: span 1; 
+        width: 100%;
+        padding: 12px 0;
+        font-size: 16px;
+    }
+
+    /* ★★★ 修改 2：開始解牌按鈕 改為滿版大按鈕 ★★★ */
+    #btnReveal {
+        grid-column: 1 / -1; /* 關鍵：強制跨滿整行 */
+        width: 100%;
+        padding: 16px 0;     /* 變高，更好按 */
+        font-size: 20px;     /* 字體加大，更明顯 */
+        font-weight: bold;
+        margin-top: 5px;
+        background: rgba(241, 196, 15, 0.15); /* 加一點微弱背景色增加辨識度 */
+        border-width: 2px;   /* 邊框加粗 */
+    }
+    
+    /* 重置按鈕 (維持滿版) */
+    #btnReset {
+        grid-column: 1 / -1;
+        width: 100%;
+        padding: 12px;
+        margin-top: 5px;
+    }
+    
+    /* 手機版選單字體與箭頭調整 */
+    select {
+        max-width: 100%;
+        font-size: 14px;
+        height: auto; /* 讓 padding 決定高度 */
     }
 }
-select {
-    /* ...原有設定... */
-    min-width: 110px; /* 確保有最小寬度 */
-    text-align: center;
-}
-
-/* 針對選單預設選項 (disabled) 的顏色調整 */
-select option[disabled] {
-    color: #888;
-    font-weight: bold;
-    background: #111;
-}
-
-            @media (max-width: 600px) {
-            :root {
-                --card-w: 80px; 
-                --card-h: 140px;
-            }
-
-            .controls {
-                bottom: 0; /* 貼底 */
-                padding: 15px 15px 30px 15px; /* 底部留白給 iPhone 黑條 */
-                width: 100%;
-                border-radius: 20px 20px 0 0;
-                gap: 10px;
-                background: rgba(0,0,0,0.9);
-                box-sizing: border-box; 
-                
-                /* ★ 關鍵修改：強制改用 Grid 網格 */
-                display: grid; 
-                grid-template-columns: 1fr 1fr; /* 分兩欄 */
-                grid-template-rows: auto auto auto; /* 自動三行 */
-                left: 0; 
-            }
-
-            /* 第一行：綜合運勢 (跨兩欄) */
-            #categorySelector {
-                grid-column: 1 / -1; 
-                width: 100%;
-            }
-
-            /* 第二行：基礎 與 進階 (各佔一欄) */
-            #spreadBasic, #spreadAdv {
-                width: 100%;
-                font-size: 13px;
-                padding: 10px 5px;
-            }
-
-            /* 第三行：按鈕 (明確指定各佔一格) */
-            #btnShuffle, #btnSpread {
-                width: 100%;
-                padding: 12px 0;
-                font-size: 16px;
-                grid-column: span 1; 
-            }
-            
-            /* 重置按鈕 */
-            #btnReset {
-                grid-column: 1 / -1;
-                width: 100%;
-                padding: 12px;
-            }
-        }
-
         /* --- 桌面區域 --- */
         .table-area {
             position: relative;
@@ -307,11 +349,13 @@ option {
         font-size: 12px;
     }
 }
-
-        /* --- Modal 進階樣式 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 2000;
+            background: rgba(0,0,0,0.85); 
+            
+            /* ★★★ 修改這裡：層級要比 hint (20002) 還高，這樣視窗才會蓋過文字 ★★★ */
+            z-index: 30000 !important; 
+            
             display: none; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.3s;
         }
